@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -28,98 +30,133 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const CaptachaVerification(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class CaptachaVerification extends StatefulWidget {
+  const CaptachaVerification({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CaptachaVerification> createState() => _CaptachaVerificationState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _CaptachaVerificationState extends State<CaptachaVerification> {
+  String randomString = "";
+  bool isVerified = false;
+  TextEditingController controller = TextEditingController();
+  //Logic for creating Captcha
+  void buildCaptcha() {
+    //Letter from which we want to generate the captach
+    //I have taken A to Z all small nand caps letters along with numbers
+    //You can change this as per your convience
+    const letters =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    const length = 6;
+    //Length of Captcha to be generated
+    final random = Random();
+    //Select random letters from above list
+    randomString = String.fromCharCodes(List.generate(
+        length, (index) => letters.codeUnitAt(random.nextInt(letters.length))));
+    setState(() {});
+    print("the random string is $randomString");
+  }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    //To generate number on loading of page
+    buildCaptcha();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        elevation: 2,
+        title: const Text("Flutter Captcha Verification"),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          children: [
             const Text(
-              'You have pushed the button this many times:',
+              "Enter Captacha Value",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            const SizedBox(
+              width: 10,
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                //Shown Captcha value to user
+                Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                        border: Border.all(width: 2),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Text(
+                      randomString,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    )),
+                const SizedBox(
+                  width: 10,
+                ),
+                //Regenerate captcha value
+                IconButton(
+                    onPressed: () {
+                      buildCaptcha();
+                    },
+                    icon: const Icon(Icons.refresh)),
+              ],
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            //TextFormField to enter captcha value
+            TextFormField(
+              onChanged: (value) {
+                setState(() {
+                  isVerified = false;
+                });
+              },
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Enter Captcha Value",
+                  labelText: "Enter Captcha Value"),
+              controller: controller,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            //To check captcha value and textediting controller value
+            ElevatedButton(
+                onPressed: () {
+                  isVerified = controller.text == randomString;
+
+                  setState(() {});
+                },
+                child: const Text("Check")),
+            const SizedBox(
+              height: 10,
+            ),
+            // Output whether captcha is correctly entered or not
+            if (isVerified)
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [Icon(Icons.verified), Text("Verified")],
+              )
+            else
+              const Text("Please enter value you see on screen"),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
